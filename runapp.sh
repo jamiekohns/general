@@ -108,6 +108,8 @@ main_cmd="${main_cmd/__PORT__/$port}"
 # Start tmux session (detached) and run main command in initial window
 tmux new-session -d -s "$session" -c "$app_dir" "bash -lc '$main_cmd'"
 
+echo "Runapp V 1.2"
+
 # Print URL in this terminal so VS Code auto-forwards it
 echo "Laravel running at http://127.0.0.1:${port}"
 
