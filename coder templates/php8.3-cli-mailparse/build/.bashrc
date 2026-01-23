@@ -111,3 +111,5 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+alias getrunapp="curl -o ~/runapp.sh https://raw.githubusercontent.com/jamiekohns/general/refs/heads/main/runapp.sh"
