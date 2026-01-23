@@ -117,17 +117,21 @@ echo "Laravel running at http://127.0.0.1:${port}"
 tmux new-window -t "$session" -n "dev" -c "$app_dir"
 tmux send-keys -t "$session:dev" "npm run dev" C-m
 
+# Give the window a moment to start
+sleep 0.5
+
 # Wait until a localhost URL appears in the tmux pane, then echo it to VS Code terminal
 timeout=150  # 30 seconds (150 * 0.2)
 elapsed=0
 url=""
 while [[ $elapsed -lt $timeout ]]; do
-  # Capture the pane content and search for URL
-  pane_content=$(tmux capture-pane -t "$session:dev" -p 2>/dev/null || true)
-  url=$(echo "$pane_content" | grep -Eo 'http://(localhost|127\.0\.0\.1):[0-9]+' | head -n1)
-  if [[ -n "$url" ]]; then
-    echo "Vite running at $url"
-    break
+  # Capture the pane content and search for URL (with error handling)
+  if pane_content=$(tmux capture-pane -t "$session:dev" -p 2>/dev/null); then
+    url=$(echo "$pane_content" | grep -Eo 'http://(localhost|127\.0\.0\.1):[0-9]+' | head -n1 || true)
+    if [[ -n "$url" ]]; then
+      echo "Vite running at $url"
+      break
+    fi
   fi
   sleep 0.2
   elapsed=$((elapsed + 1))
