@@ -126,7 +126,8 @@ tmux send-keys -t "$session:dev" "npm run dev" C-m
 
 # Wait until a localhost URL appears, then echo it to VS Code terminal
 while :; do
-  if grep -Eo 'http://(localhost|127\.0\.0\.1):[0-9]+' "$vite_log" | head -n1 | read -r url; then
+  url=$(grep -Eo 'http://(localhost|127\.0\.0\.1):[0-9]+' "$vite_log" 2>/dev/null | head -n1)
+  if [[ -n "$url" ]]; then
     echo "Vite running at $url"
     break
   fi
