@@ -111,12 +111,16 @@ tmux new-session -d -s "$session" -c "$app_dir" "bash -lc '$main_cmd'"
 # Print URL in this terminal so VS Code auto-forwards it
 echo "Laravel running at http://127.0.0.1:${port}"
 
-# Create a second window to run npm dev
-tmux new-window -t "$session" -n "dev" -c "$app_dir" "bash -lc 'npm run dev'"
+# Create a second window (but don't run command yet)
+tmux new-window -t "$session" -n "dev" -c "$app_dir"
 
-# Pipe the dev window output to a log file
+# Set up logging before running the command
 vite_log="/tmp/${session}-vite.log"
+> "$vite_log"  # Clear log file
 tmux pipe-pane -t "$session:dev" -o "cat >> '$vite_log'"
+
+# Now send the command to run
+tmux send-keys -t "$session:dev" "npm run dev" C-m
 
 # Wait until a localhost URL appears, then echo it to VS Code terminal
 while :; do
