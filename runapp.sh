@@ -121,18 +121,29 @@ vite_log="/tmp/${session}-vite.log"
 > "$vite_log"  # Clear log file
 tmux pipe-pane -t "$session:dev" -o "cat >> '$vite_log'"
 
+# Give pipe-pane a moment to set up
+sleep 0.1
+
 # Now send the command to run
 tmux send-keys -t "$session:dev" "npm run dev" C-m
 
 # Wait until a localhost URL appears, then echo it to VS Code terminal
-while :; do
+timeout=30
+elapsed=0
+while [[ $elapsed -lt $timeout ]]; do
   url=$(grep -Eo 'http://(localhost|127\.0\.0\.1):[0-9]+' "$vite_log" 2>/dev/null | head -n1)
   if [[ -n "$url" ]]; then
     echo "Vite running at $url"
     break
   fi
   sleep 0.2
+  elapsed=$((elapsed + 1))
 done
+
+if [[ -z "$url" ]]; then
+  echo "Warning: Vite URL not detected after ${timeout} seconds"
+  echo "Check tmux session: tmux attach -t $session"
+fi
 
 echo "tmux session '$session' started."
 echo "Attach with: tmux attach -t $session"
