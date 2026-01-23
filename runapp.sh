@@ -70,6 +70,16 @@ find_free_port() {
   done
 }
 
+# Check for APP_PORT in .env file (highest priority)
+env_file="$app_dir/.env"
+if [[ -f "$env_file" ]]; then
+  env_port=$(grep -E '^APP_PORT=' "$env_file" | cut -d'=' -f2 | tr -d '[:space:]"' || true)
+  if [[ -n "$env_port" ]]; then
+    port="$env_port"
+    echo "Using APP_PORT from .env: $port"
+  fi
+fi
+
 if [[ -z "${port}" ]]; then
   port="$(find_free_port)"
 fi
