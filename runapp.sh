@@ -109,7 +109,7 @@ echo "Runapp V 1.2"
 # echo "Laravel running at http://127.0.0.1:${port}"
 
 # Start a new tmux session
-tmux new-session -d -s "$session" -c "$app_dir" "bash -lc '$main_cmd'"
+tmux new-session -s "$session" -c "$app_dir" "bash -lc '$main_cmd'"
 
 # Wait 3 seconds before creating the next window
 sleep 3
