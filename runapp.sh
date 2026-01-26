@@ -105,42 +105,21 @@ EOF
 
 main_cmd="${main_cmd/__PORT__/$port}"
 
-# Start tmux session (detached) and run main command in initial window
+echo "Runapp V 1.2"
+# echo "Laravel running at http://127.0.0.1:${port}"
+
+# Start a new tmux session
 tmux new-session -d -s "$session" -c "$app_dir" "bash -lc '$main_cmd'"
 
-echo "Runapp V 1.2"
-
-# Print URL in this terminal so VS Code auto-forwards it
-echo "Laravel running at http://127.0.0.1:${port}"
+# Wait 3 seconds before creating the next window
+sleep 3
 
 # Create a second window and run npm dev
 tmux new-window -t "$session" -n "dev" -c "$app_dir"
 tmux send-keys -t "$session:dev" "npm run dev" C-m
 
-# Give the window a moment to start
-sleep 0.5
+# Select the first window before attaching
+tmux select-window -t "$session:0"
 
-# Wait until a localhost URL appears in the tmux pane, then echo it to VS Code terminal
-timeout=150  # 30 seconds (150 * 0.2)
-elapsed=0
-url=""
-while [[ $elapsed -lt $timeout ]]; do
-  # Capture the pane content and search for URL (with error handling)
-  if pane_content=$(tmux capture-pane -t "$session:dev" -p 2>/dev/null); then
-    url=$(echo "$pane_content" | grep -Eo 'http://(localhost|127\.0\.0\.1):[0-9]+' | head -n1 || true)
-    if [[ -n "$url" ]]; then
-      echo "Vite running at $url"
-      break
-    fi
-  fi
-  sleep 0.2
-  elapsed=$((elapsed + 1))
-done
-
-if [[ -z "$url" ]]; then
-  echo "Warning: Vite URL not detected after 30 seconds"
-  echo "Check tmux session: tmux attach -t $session"
-fi
-
-echo "tmux session '$session' started."
-echo "Attach with: tmux attach -t $session"
+# Attach to the session so VS Code can see output
+tmux attach -t "$session"
