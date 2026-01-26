@@ -27,7 +27,8 @@ RUN apt-get update && \
         procps \
         gnupg2 \
         unixodbc-dev \
-        build-essential && \
+        build-essential 
+        gpg && \
     rm -rf /var/lib/apt/lists/*
 
 # PHP extensions
