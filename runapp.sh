@@ -17,6 +17,9 @@ port=""
 kill_session=false
 shift
 
+# Print version info
+echo "Runapp V 1.2"
+
 # Parse optional port flag
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -73,10 +76,15 @@ find_free_port() {
 # Check for APP_PORT in .env file (highest priority)
 env_file="$app_dir/.env"
 if [[ -f "$env_file" ]]; then
-  env_port=$(grep -E '^APP_PORT=' "$env_file" | cut -d'=' -f2 | tr -d '[:space:]"' || true)
-  if [[ -n "$env_port" ]]; then
-    port="$env_port"
+  app_port=$(grep -E '^APP_PORT=' "$env_file" | cut -d'=' -f2 | tr -d '[:space:]"' || true)
+  if [[ -n "$app_port" ]]; then
+    port="$app_port"
     echo "Using APP_PORT from .env: $port"
+  fi
+  vite_port=$(grep -E '^VITE_PORT=' "$env_file" | cut -d'=' -f2 | tr -d '[:space:]"' || true)
+  if [[ -n "$vite_port" ]]; then
+    vport="$vite_port"
+    echo "Using VITE_PORT from .env: $vport"
   fi
 fi
 
@@ -108,14 +116,9 @@ main_cmd="${main_cmd/__PORT__/$port}"
 # Start tmux session) and run main command in initial window
 tmux new-session -d -s "$session" -c "$app_dir" "bash -lc '$main_cmd; exec bash'"
 
-echo "Runapp V 1.2"
-
-# Print URL in this terminal so VS Code auto-forwards it
-echo "Laravel running at http://localhost:${port}"
-
 # Create a second window and run npm dev
 tmux new-window -t "$session" -n "dev" -c "$app_dir"
-tmux send-keys -t "$session:dev" "npm run dev" C-m
+tmux send-keys -t "$session:dev" "npm run dev -- --port $vport" C-m
 
 # Give the window a moment to start
 sleep 0.5
@@ -141,6 +144,10 @@ if [[ -z "$url" ]]; then
   echo "Warning: Vite URL not detected after 30 seconds"
   echo "Check tmux session: tmux attach -t $session"
 fi
+
+# Print URL in this terminal so VS Code auto-forwards it
+echo "Laravel running at http://localhost:${port}"
+echo "Vite running at http://localhost:${vport}"
 
 echo "tmux session '$session' started."
 echo "Attach with: tmux attach -t $session"
