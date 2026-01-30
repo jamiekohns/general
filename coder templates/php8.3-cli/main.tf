@@ -188,6 +188,9 @@ resource "docker_image" "main" {
     context = "./build"
     build_args = {
       USER = local.username
+      INSTALL_MAILPARSE = "${data.coder_parameter.install_mailparse.value}"
+      SVN_USERNAME = "${data.coder_parameter.svn_username.value}"
+      SVN_BASE_URL = "${data.coder_parameter.svn_base_url.value}"
     }
   }
   triggers = {
@@ -232,4 +235,31 @@ resource "docker_container" "workspace" {
     label = "coder.workspace_name"
     value = data.coder_workspace.me.name
   }
+}
+
+data "coder_parameter" "install_mailparse" {
+  name         = "install_mailparse"
+  type         = "bool"
+  description  = "Install the PHP mailparse extension at build."
+  mutable      = true
+  default      = false
+  ephemeral    = true
+}
+
+data "coder_parameter" "svn_username" {
+  name         = "svn_username"
+  type         = "string"
+  description  = "SVN username for checkout."
+  mutable      = true
+  default      = "cogent"
+  ephemeral    = true
+}
+
+data "coder_parameter" "svn_base_url" {
+  name         = "svn_base_url"
+  type         = "string"
+  description  = "SVN Server URL."
+  mutable      = true
+  default      = "https://code.sys.cogentco.com/svn/cogent/"
+  ephemeral    = true
 }

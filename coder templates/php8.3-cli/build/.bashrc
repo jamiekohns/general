@@ -89,7 +89,7 @@ fi
 
 # some more ls aliases
 alias ll='ls -l'
-#alias la='ls -A'
+alias la='ls -al'
 #alias l='ls -CF'
 
 # Alias definitions.
@@ -111,3 +111,74 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+# Fetch and install latest runapp script
+function getrunapp() {
+    curl -o ~/runapp.sh https://raw.githubusercontent.com/jamiekohns/general/refs/heads/main/runapp.sh
+    chmod +x ~/runapp.sh
+
+    if [ ! -L /usr/bin/runapp ]; then
+        sudo ln -s "$HOME/runapp.sh" /usr/bin/runapp
+        echo "Symlink created at /usr/bin/runapp"
+    fi
+}
+
+# Laravel cache clear function
+function artisan-clear() {
+    # Check if artisan file exists in current directory
+    if [ ! -f "artisan" ]; then
+        echo "Error: artisan file not found in current directory"
+        return 1
+    fi
+
+    # Run Laravel clear commands
+    php artisan view:clear && \
+    php artisan cache:clear && \
+    php artisan route:clear && \
+    rm -f storage/framework/sessions/*
+
+    if [ $? -eq 0 ]; then
+        echo "✓ All caches cleared successfully"
+    else
+        echo "✗ An error occurred while clearing caches"
+        return 1
+    fi
+}
+
+export SVN_REPO_URL={{SVN_REPO_URL}}
+export SVN_REPO_USERNAME={{SVN_REPO_USERNAME}}
+
+function svn() {
+    # Check if the command is 'status' or 'st'
+    if [ "$1" = "status" ] || [ "$1" = "st" ]; then
+        # Clear Laravel views if we're in a Laravel project
+        if [ -d "storage/framework/views" ]; then
+            rm -f storage/framework/views/*
+            GREEN='\033[0;32m'
+            NC='\033[0m' # No color
+            echo -e "${GREEN}✓ Cleared Laravel views${NC}"
+        fi
+    fi
+
+    # svn clone [REPO_NAME]
+    # repo MUST have /trunk
+    # e.g., svn clone project1 will checkout from SVN_REPO_URL/project1/trunk into ./project1
+    if [ "$1" = "clone" ]; then
+        # ensure that we are in the projects directory
+        cd ~/projects || return
+
+        # Prepend SVN_REPO_URL if not already present
+        local repo_path="$2"
+        if [[ ! "$repo_path" =~ ^"${SVN_REPO_URL}" ]]; then
+            repo_path="${SVN_REPO_URL}${repo_path}/trunk"
+        else
+            repo_path="$2/trunk"
+        fi
+
+        command svn checkout "$repo_path" "$2" --username "${SVN_REPO_USERNAME}"
+        return
+    fi
+
+    # Run the actual svn command with all arguments
+    command svn "$@"
+}

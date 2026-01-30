@@ -27,7 +27,7 @@ RUN apt-get update && \
         procps \
         gnupg2 \
         unixodbc-dev \
-        build-essential 
+        build-essential \
         gpg && \
     rm -rf /var/lib/apt/lists/*
 
@@ -67,8 +67,12 @@ RUN pecl install sqlsrv pdo_sqlsrv && \
     echo "extension=sqlsrv.so" > /usr/local/etc/php/conf.d/20-sqlsrv.ini && \
     echo "extension=pdo_sqlsrv.so" > /usr/local/etc/php/conf.d/30-pdo_sqlsrv.ini
 
-RUN pecl install mailparse && \
-    docker-php-ext-enable mailparse
+# Install mailparse extension (optional)
+ARG INSTALL_MAILPARSE
+RUN if [ "$INSTALL_MAILPARSE" = "true" ] ; then \
+    pecl install mailparse && \
+    docker-php-ext-enable mailparse ; \
+fi
 
 # Generate locale and persist it
 RUN sed -i 's/^# *\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen && \
@@ -87,6 +91,15 @@ RUN sed -i 's/\r$//' /etc/skel/.bashrc
 COPY .bashrc /home/${USER}/.bashrc
 RUN sed -i 's/\r$//' /home/${USER}/.bashrc \
     && chown ${USER}:${USER} /home/${USER}/.bashrc
+
+# Replace SVN placeholders with actual values
+ARG SVN_BASE_URL
+ARG SVN_USERNAME
+RUN sed -i "s|{{SVN_REPO_URL}}|${SVN_BASE_URL}|g" /etc/skel/.bashrc \
+    && sed -i "s|{{SVN_REPO_USERNAME}}|${SVN_USERNAME}|g" /etc/skel/.bashrc \
+    && sed -i "s|{{SVN_REPO_URL}}|${SVN_BASE_URL}|g" /home/${USER}/.bashrc \
+    && sed -i "s|{{SVN_REPO_USERNAME}}|${SVN_USERNAME}|g" /home/${USER}/.bashrc
+
 
 ARG USER=coder
 RUN useradd --groups sudo --no-create-home --shell /bin/bash ${USER} \

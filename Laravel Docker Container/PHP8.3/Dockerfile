@@ -67,6 +67,7 @@ RUN pecl install sqlsrv pdo_sqlsrv && \
     echo "extension=sqlsrv.so" > /usr/local/etc/php/conf.d/20-sqlsrv.ini && \
     echo "extension=pdo_sqlsrv.so" > /usr/local/etc/php/conf.d/30-pdo_sqlsrv.ini
 
+# Install mailparse extension
 RUN pecl install mailparse && \
     docker-php-ext-enable mailparse
 
