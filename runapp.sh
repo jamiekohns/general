@@ -17,6 +17,13 @@ port=""
 kill_session=false
 shift
 
+# Resolve full path (handles ~, ., .., and relative paths)
+app_dir="${app_dir/#\~/$HOME}"  # Expand ~ to $HOME
+app_dir="$(cd "$app_dir" 2>/dev/null && pwd)" || {
+  echo "Error: Cannot resolve path: $1" >&2
+  exit 1
+}
+
 # Print version info
 echo "Runapp V 1.2"
 
