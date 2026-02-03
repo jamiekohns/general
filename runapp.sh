@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: runapp <project-name> [-p|--port PORT] [-k|--kill]" >&2
+  echo "Usage: runapp <app-dir-path> [-p|--port PORT] [-k|--kill]" >&2
   echo "  -p, --port PORT    Specify port number (optional)" >&2
   echo "  -k, --kill         Kill the tmux session for this project" >&2
   exit 1
@@ -12,7 +12,7 @@ if [[ $# -lt 1 ]]; then
   usage
 fi
 
-project_name="$1"
+app_dir="$1"
 port=""
 kill_session=false
 shift
@@ -42,8 +42,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-base_dir="$HOME/projects"
-app_dir="$base_dir/$project_name"
+# Derive project name from app_dir (basename of the path)
+project_name="$(basename "$app_dir")"
 session="$project_name"
 
 # Handle kill session flag
