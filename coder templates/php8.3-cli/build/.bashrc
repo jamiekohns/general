@@ -113,14 +113,12 @@ if ! shopt -oq posix; then
 fi
 
 # Fetch and install latest runapp script
-function getrunapp() {
-    curl -o ~/runapp.sh https://raw.githubusercontent.com/jamiekohns/general/refs/heads/main/runapp.sh
-    chmod +x ~/runapp.sh
-
-    if [ ! -L /usr/bin/runapp ]; then
-        sudo ln -s "$HOME/runapp.sh" /usr/bin/runapp
-        echo "Symlink created at /usr/bin/runapp"
+function runapp() {
+    if [ ! -f ~/runapp.sh ]; then
+        curl -o ~/runapp.sh https://raw.githubusercontent.com/jamiekohns/general/refs/heads/main/runapp.sh
     fi
+
+    bash ~/runapp.sh "$@"
 }
 
 # Laravel cache clear function
@@ -149,17 +147,6 @@ export SVN_REPO_URL={{SVN_REPO_URL}}
 export SVN_REPO_USERNAME={{SVN_REPO_USERNAME}}
 
 function svn() {
-    # Check if the command is 'status' or 'st'
-    if [ "$1" = "status" ] || [ "$1" = "st" ]; then
-        # Clear Laravel views if we're in a Laravel project
-        if [ -d "storage/framework/views" ]; then
-            rm -f storage/framework/views/*
-            GREEN='\033[0;32m'
-            NC='\033[0m' # No color
-            echo -e "${GREEN}✓ Cleared Laravel views${NC}"
-        fi
-    fi
-
     # svn clone [REPO_NAME]
     # repo MUST have /trunk
     # e.g., svn clone project1 will checkout from SVN_REPO_URL/project1/trunk into ./project1

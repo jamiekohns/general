@@ -40,6 +40,11 @@ resource "coder_agent" "main" {
       touch ~/.init_done
     fi
 
+    # Create projects directory if project_dir parameter is empty
+    if [ -z "${data.coder_parameter.project_dir.value}" ]; then
+      mkdir -p /home/${local.username}/projects
+    fi
+
     # Install the latest code-server.
     # Append "--version x.x.x" to install a specific version of code-server.
     curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=/tmp/code-server
@@ -218,6 +223,16 @@ resource "docker_container" "workspace" {
     read_only      = false
   }
 
+  # Conditionally mount host path to projects directory
+  dynamic "volumes" {
+    for_each = data.coder_parameter.project_dir.value != "" ? [1] : []
+    content {
+      container_path = "/home/${local.username}/${data.coder_parameter.project_name[0].value}"
+      host_path      = data.coder_parameter.project_dir.value
+      read_only      = false
+    }
+  }
+
   # Add labels in Docker to keep track of orphan resources.
   labels {
     label = "coder.owner"
@@ -238,28 +253,54 @@ resource "docker_container" "workspace" {
 }
 
 data "coder_parameter" "install_mailparse" {
-  name         = "install_mailparse"
+  name         = "Install Mailparse Extension"
   type         = "bool"
   description  = "Install the PHP mailparse extension at build."
   mutable      = true
   default      = false
   ephemeral    = true
+  order        = 1
 }
 
-data "coder_parameter" "svn_username" {
-  name         = "svn_username"
+data "coder_parameter" "project_dir" {
+  name         = "Project Directory"
   type         = "string"
-  description  = "SVN username for checkout."
+  description  = "Project directory: mount this host directory to the user's home directory in the workspace."
   mutable      = true
-  default      = "cogent"
+  default      = ""
   ephemeral    = true
+  order        = 2
+}
+
+data "coder_parameter" "project_name" {
+  count = data.coder_parameter.project_dir.value != "" ? 1 : 0
+  name         = "Mount Project Directory As"
+  type         = "string"
+  description  = "Project Name: directory name for the mounted project directory inside the user's home directory."
+  mutable      = true
+  default      = "project"
+  ephemeral    = true
+  order        = 3
 }
 
 data "coder_parameter" "svn_base_url" {
-  name         = "svn_base_url"
+  name         = "SVN Base URL"
   type         = "string"
   description  = "SVN Server URL."
   mutable      = true
   default      = "https://code.sys.cogentco.com/svn/cogent/"
   ephemeral    = true
+  order        = 4
 }
+
+data "coder_parameter" "svn_username" {
+  name         = "SVN Username"
+  type         = "string"
+  description  = "SVN username for checkout."
+  mutable      = true
+  default      = "${local.username}"
+  ephemeral    = true
+  order        = 5
+}
+
+

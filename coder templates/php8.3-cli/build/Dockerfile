@@ -108,5 +108,3 @@ RUN useradd --groups sudo --no-create-home --shell /bin/bash ${USER} \
 
 USER ${USER}
 WORKDIR /home/${USER}
-
-RUN mkdir -p /home/${USER}/projects
